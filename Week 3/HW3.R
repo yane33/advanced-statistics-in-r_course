@@ -61,7 +61,7 @@ df_long_1
 install.packages("car")
 library(car)
 range(df_long_1$age) # 20-39
-recode() # age continuous demographic variable => categorical factor with four different levels
+# recode() # age continuous demographic variable => categorical factor with four different levels
 df_long_1$f_age <- as.factor(recode(df_long_1$age, "20:25 = 'young'; 26:30 = 'mid-young'; 31:35 = 'mid-old'; 35:40 = 'old'"))
 str(df_long_1)
 table(df_long_1$f_age)
@@ -97,18 +97,23 @@ qplot(cty, data = df_subset_VFHT, geom = "histogram", facets = .~manufacturer,
 qplot(cty, hwy, data = df_subset_VFHT, shape = class,
       xlab = "City mileage", ylab = "Highway mileage") # colour is a different color
 
-# 07
+# 07 # the x-axis is not correct
 install.packages("dplyr")
 library(dplyr)
 df_subset_VFHT$class <- as.factor(df_subset_VFHT$class)
-p <- ggplot(df_subset_VFHT, aes(x = displ, y = hwy, colour = class)) +
+p <- ggplot(df_subset_VFHT, aes(x = cty, y = hwy, colour = class)) +
   geom_point(alpha = 0.5, size = 1.5) +
   geom_smooth(method = "lm", se = FALSE, linewidth = 1.2) +
   scale_colour_brewer(palette = "Set1") +
-  labs(x = "Engine displacement (L)", y = "Highway fuel economy (mpg)", colour = "Vehicle class") +
+  labs(x = "City mileage", y = "Highway mileage", colour = "Vehicle class") +
   theme_bw(base_size = 13) +
   theme(legend.position = "right")
 p
+
+ggplot(df_subset_VFHT, aes(x = cty, y = hwy, color = class)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
 
 # 08 (a)
 names(df_subset_VFHT)
@@ -179,7 +184,6 @@ p <- ggplot(mpgsmall_long, aes(x = class, y = mileage, fill = type)) +
   # ggthemes 配色与主题（第 8c 题要求，保留轴标签，不用 WSJ）
   scale_fill_few() +
   labs(
-    title   = "City and Highway Fuel Economy by Vehicle Class",
     x       = "Vehicle class",
     y       = "Mean mileage (mpg)",
     fill    = "Mileage type",
@@ -195,4 +199,34 @@ p <- ggplot(mpgsmall_long, aes(x = class, y = mileage, fill = type)) +
   )
 p
 
+# bonus
+getwd()
+setwd("/Users/heyanyan/Desktop/2025_Master_8,0/2026-2027/2026_FA_B1/26F_R_10/Week 2")
+df <- read.csv("Rating_ExampleData.csv")
+df
+# change the wide to long format
+install.packages("tidyverse")
+install.packages("ggplot2")
+install.packages("ggrain")
+library(ggplot2)
+library(ggrain)
+library(tidyverse)
 
+df_long <- df %>%
+  pivot_longer(
+    cols = c(rating_1, rating_2, rating_3),
+    names_to = "condition",
+    values_to = "mood"
+  ) %>%
+  mutate(
+    condition = factor(condition, levels = c("rating_1", "rating_2", "rating_3"), labels = c("neutral", "happy", "sad"))
+  )
+df_long
+
+ggplot(df_long, aes(x = condition, y = mood, fill = condition)) + 
+  geom_rain(rain.side = "l", boxplot.args = list(width = 0.1, alpha = 0.5), violin.args = list(alpha = 0.3)) +
+  geom_line(aes(group = pp_code), colour = "grey40", alpha = 0.3) +
+  geom_point(size = 1.5, alpha = 0.8) +
+  scale_fill_manual(values = c("neutral" = "grey70", "happy" = "gold", "sad" = "steelblue")) +
+  labs(x = "Condition", y = "Mood rating", substitle = "Each line = one participant") +
+  theme_minimal()
